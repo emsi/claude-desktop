@@ -58,9 +58,6 @@ if ! command -v bwrap &>/dev/null; then
     sudo apt update && sudo apt install -y bubblewrap
 fi
 
-# create fake passwd file
-grep "^$(whoami)" /etc/passwd | sed 's#[^\:]*:x:\([0-9\:]*\).*#agent:x:\1Agent:/home/agent:/bin/bash#' > "$HOME/sandboxes/fake_passwd.${SANDBOX_NAME}"
-
 BWRAP_CMD=( 
   bwrap 
   --proc /proc
@@ -121,6 +118,9 @@ BWRAP_CMD+=(
 # Check if SANDBOX_HOME exists, if not create it and set ownership
 if [ ! -d "$SANDBOX_HOME" ]; then
   mkdir -p "$SANDBOX_HOME"
+  
+  # create fake passwd file
+  grep "^$(whoami)" /etc/passwd | sed 's#[^\:]*:x:\([0-9\:]*\).*#agent:x:\1Agent:/home/agent:/bin/bash#' > "$HOME/sandboxes/fake_passwd.${SANDBOX_NAME}"
 
   cat > "${SANDBOX_HOME}/init.sh" <<EOF
 #!/bin/bash
