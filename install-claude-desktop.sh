@@ -123,6 +123,8 @@ mkdir -p "$INSTALL_DIR/bin"
 # Install asar if needed
 if ! command -v asar &> /dev/null; then
     echo "Installing asar package globally..."
+    sudo apt update -y
+    sudo apt install npm
     sudo npm install -g asar
 fi
 
