@@ -140,6 +140,8 @@ mkdir -p ~/Documents/CODE
 mkdir -p ~/Documents/NOTES
 mkdir -p ~/Downloads
 
+echo '[ -r "$HOME/.bashrc" ] && . "$HOME/.bashrc"' > ~/.profile
+
 echo "Installing uv/uvx..."
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -181,7 +183,7 @@ EOF
 fi
 
 if [ "$#" -gt 0 ]; then
-  "${BWRAP_CMD[@]}" "$@"
+  "${BWRAP_CMD[@]}" /bin/bash -i -c "$(printf '%q ' "$@")"
 else
   "${BWRAP_CMD[@]}" /bin/bash
 fi
