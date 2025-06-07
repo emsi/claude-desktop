@@ -99,8 +99,6 @@ if ! check_command "electron"; then
     echo "Electron installed successfully"
 fi
 
-# Extract version from the installer filename
-VERSION=$(basename "$CLAUDE_DOWNLOAD_URL" | grep -oP 'Claude-Setup-x64\.exe' | sed 's/Claude-Setup-x64\.exe/0.9.3/')
 PACKAGE_NAME="claude-desktop"
 ARCHITECTURE="amd64"
 MAINTAINER="Claude Desktop Linux Maintainers"
@@ -135,6 +133,24 @@ if ! wget -O "$CLAUDE_EXE" "$CLAUDE_DOWNLOAD_URL"; then
 fi
 echo "✓ Download complete"
 
+# Extract version from the actual nupkg file after extraction
+echo "🔍 Extracting installer to determine version..."
+cd "$WORK_DIR"
+if ! 7z x -y "$CLAUDE_EXE"; then
+    echo "❌ Failed to extract installer"
+    exit 1
+fi
+
+# Find the actual nupkg file and extract version from it
+NUPKG_FILE=$(find . -name "AnthropicClaude-*.nupkg" -type f | head -n 1)
+if [ -z "$NUPKG_FILE" ]; then
+    echo "❌ No nupkg file found in installer"
+    exit 1
+fi
+
+VERSION=$(basename "$NUPKG_FILE" | sed 's/AnthropicClaude-\(.*\)-full\.nupkg/\1/')
+echo "✓ Detected version: $VERSION"
+
 # Downloading sandbox script if it doesn't exist
 echo "📥 Checking for sandbox script..."
 mkdir -p "$HOME/sandboxes/"
@@ -149,15 +165,9 @@ if [ ! -f "$SANDBOX_SCRIPT" ]; then
 fi
 chmod +x "$SANDBOX_SCRIPT"
 
-# Extract resources
-echo "📦 Extracting resources..."
-cd "$WORK_DIR"
-if ! 7z x -y "$CLAUDE_EXE"; then
-    echo "❌ Failed to extract installer"
-    exit 1
-fi
-
-if ! 7z x -y "AnthropicClaude-$VERSION-full.nupkg"; then
+# Extract nupkg resources
+echo "📦 Extracting nupkg resources..."
+if ! 7z x -y "$NUPKG_FILE"; then
     echo "❌ Failed to extract nupkg"
     exit 1
 fi
