@@ -2,6 +2,7 @@
 set -e
 
 # Update this URL when a new version of Claude Desktop is released
+# The version number will be automatically detected from the extracted files
 CLAUDE_DOWNLOAD_URL="https://storage.googleapis.com/osprey-downloads-c02f6a0d-347c-492b-a752-3e0651722e97/nest-win-x64/Claude-Setup-x64.exe"
 
 # Check for Debian-based system
@@ -99,8 +100,8 @@ if ! check_command "electron"; then
     echo "Electron installed successfully"
 fi
 
-# Extract version from the installer filename
-VERSION=$(basename "$CLAUDE_DOWNLOAD_URL" | grep -oP 'Claude-Setup-x64\.exe' | sed 's/Claude-Setup-x64\.exe/0.9.3/')
+# Version will be extracted dynamically from the nupkg filename after extraction
+# This eliminates the need to update the script for each new Claude version
 PACKAGE_NAME="claude-desktop"
 ARCHITECTURE="amd64"
 MAINTAINER="Claude Desktop Linux Maintainers"
@@ -157,7 +158,18 @@ if ! 7z x -y "$CLAUDE_EXE"; then
     exit 1
 fi
 
-if ! 7z x -y "AnthropicClaude-$VERSION-full.nupkg"; then
+# Find and extract the nupkg file (version-agnostic)
+NUPKG_FILE=$(ls AnthropicClaude-*-full.nupkg 2>/dev/null | head -n1)
+if [ -z "$NUPKG_FILE" ]; then
+    echo "❌ Failed to find AnthropicClaude nupkg file"
+    exit 1
+fi
+
+# Extract version from the nupkg filename
+VERSION=$(echo "$NUPKG_FILE" | sed -E 's/AnthropicClaude-([0-9]+\.[0-9]+\.[0-9]+)-full\.nupkg/\1/')
+echo "✓ Detected version: $VERSION"
+
+if ! 7z x -y "$NUPKG_FILE"; then
     echo "❌ Failed to extract nupkg"
     exit 1
 fi
